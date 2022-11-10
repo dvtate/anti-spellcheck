@@ -59,7 +59,7 @@ function possiblePairs(a, b) {
 
 // Letter similarity => less likely to notice typos
 // Somewhat arbitrary
-const similarLetters = [
+const similarLetters = [...new Set([
     ...pairsPerms('aceo'),
     ...pairsPerms('tlifbhd'),
     ...pairsPerms('umnhr'),
@@ -68,23 +68,27 @@ const similarLetters = [
     ...pairsPerms('jgypq'),
     'uv', 'sz', 'bd', 'nr',
     'vu', 'zs', 'db', 'rn',
-];
-
+    'ij', 'il', 'bh', 'hb',
+    'cd', 'aq', 'nm', 'nh',
+    'ht', 'yu', 'ft', 'xz',
+    'gy', 'vy',
+])];
 const oppositeHands = possiblePairs(lhsKeys, rhsKeys);
 
 
 /// Generate a list of all possible substr replacements
 function strReplacements(str, from, to) {
     function strOverwrite(str, ind, substr) {
-        return str.split(0, ind) + substr + str.split(ind + substr.length);
+        // console.log({str, ind, substr});
+        return str.slice(0, ind) + substr + str.slice(ind + substr.length);
     }
     const ret = [];
     let i = str.indexOf(from);
     let i2 = i;
-    while (i2 !== -1) {
+    while (i2 !== -1 && ret.length < 10) {
         ret.push(strOverwrite(str, i, to));
         i2 = str.slice(i + 1).indexOf(from);
-        i += i2;
+        i += i2 + 1;
     }
     return ret;
 }
@@ -111,11 +115,14 @@ function genMispellings(word, skip = {}, desperate = false) {
     // Flip letters we type together quickly
     function flipLetters() {
         const commonlyFlipped = similarLetters.filter(p =>
-            handies.includes(p) && !(desperate && neighboringKeys.includes(p)));
+            oppositeHands.includes(p) && !(desperate && neighboringKeys.includes(p)));
         const nDups = strDuppedChars(word);
         const spellings = commonlyFlipped
             .map(p => strReplacements(word, p[0], p[1]))
             .reduce((a, b) => a.concat(b), []);
+
+
+        // console.log('flipLetters', spellings);
 
         // If not desparate don't break up duplicate letters bc
         if (desperate)
@@ -139,14 +146,18 @@ function genMispellings(word, skip = {}, desperate = false) {
     function dropDuplicates() {
         const letters = word.split('');
         const special = desperate ? 'oe' : ''; // easier to spot e or o dups (imo)
+        const spellings = [];
         for (let i = 0; i < letters.length; i++)
             if (letters[i - 1] === letters[i] && special.includes(letters[i]))
-                ret.push(word.slice(0, i - 1) + word.slice(i));
+                spellings.push(word.slice(0, i - 1) + word.slice(i));
 
         if (desperate) {
-            ret.push(...strReplacements(word, 'ee', 'i'));
-            ret.push(...strReplacements(word, 'oo', 'u'));
+            spellings.push(...strReplacements(word, 'ee', 'i'));
+            spellings.push(...strReplacements(word, 'oo', 'u'));
         }
+
+        // console.log('dropDuplicates', spellings);
+        ret.push(...spellings);
     }
 
     if (!skip.flipLetters)
@@ -181,10 +192,17 @@ function genMispellings(word, skip = {}, desperate = false) {
         return score;
     }
 
+    // We have plenty, pick top 8
+    if (ret.length > 8 && !desperate)
+        ret = ret
+            .sort((a, b) => changeScore(a) - changeScore(b))
+            .slice(0, 8);
 
-    // We have plenty, remove ones which change first part of the word
-    if (ret.length > 8)
-        ret = ret.slice(0, 8);
-    if (ret.length)
-    return ret;
+    //
+    if (ret.length || desperate)
+        return ret;
+    else
+        return genMispellings(word, skip, desperate);
 }
+
+module.exports.genMispellings = genMispellings;
