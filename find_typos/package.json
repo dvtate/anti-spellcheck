@@ -1,0 +1,33 @@
+{
+  "name": "anti-spellcheck_find_typos",
+  "version": "1.0.0",
+  "description": "scraper to find typos",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dvtate/anti-spellcheck.git"
+  },
+  "author": "dvtate",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dvtate/anti-spellcheck/issues"
+  },
+  "homepage": "https://github.com/dvtate/anti-spellcheck#readme",
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "mysql": "^2.18.1",
+    "rss-parser": "^3.12.0",
+    "snoowrap": "^1.23.0",
+    "twit": "^2.2.11"
+  },
+  "devDependencies": {
+    "@types/debug": "^4.1.7",
+    "@types/express": "^4.17.14",
+    "@types/node": "^18.11.9",
+    "@types/twit": "^2.2.31"
+  }
+}

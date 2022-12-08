@@ -31,3 +31,10 @@ CREATE TABLE MispelledContext (
     offset BIGINT UNSIGNED DEFAULT NULL,
     UNIQUE(spelling, context, offset)
 );
+
+-- Twitter accounts to track
+CREATE TABLE Tweeters (
+	username VARCHAR(16) PRIMARY KEY,
+	lastTweetTs BIGINT UNSIGNED DEFAULT 0
+);
+INSERT INTO Tweeters (username) VALUES ('kernel_aneurysm');
