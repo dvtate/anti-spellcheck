@@ -7,7 +7,7 @@ config();
 
 // Debugger
 import Debugger from 'debug';
-const debug = Debugger("xss:rtr:db");
+const debug = Debugger("typo:db");
 
 // Get config
 const rw_cred = JSON.parse(process.env.RW_DB);

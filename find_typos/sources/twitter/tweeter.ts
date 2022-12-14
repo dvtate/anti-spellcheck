@@ -37,9 +37,9 @@ export default class Tweeter {
     public username: string;
     protected ts: number;
 
-    constructor({ username: string, lastTweetTs: number }) {
-        this.username = this.username;
-        this.ts = this.lastTweetTs;
+    constructor({ username, lastTweetTs }) {
+        this.username = username;
+        this.ts = lastTweetTs;
     }
     get lastTweetTs() {
         return this.ts;
@@ -72,6 +72,7 @@ export default class Tweeter {
     }
 
     protected async fetchTimeline(max_id?: string) {
+        debug('username: ', this.username);
         try {
             return twit.get(
                 "statuses/user_timeline",
@@ -92,9 +93,30 @@ export default class Tweeter {
         }
     }
 
+    formatTweetFeed(tweets: any[]) {
+        const ret = [];
+        tweets.forEach(t => {
+            // For retweets use original tweet
+            if (t.retweeted_status)
+                t = t.retweeted_status;
+
+            // Only English tweets
+            if (t.lang !== 'en')
+                return;
+
+            ret.push({
+                // tweetId: t.id_str,
+                url: `https://twitter.com/${this.username}/status/${t.id_str}`,
+                text: t.full_text,
+                date: Date.parse(t.created_at),
+            });
+        });
+        return ret;
+    }
+
     async getNewTweets() {
         if (this.lastTweetTs > 0) {
-            const response = await this.fetchTimeline(this.username);
+            const response = await this.fetchTimeline();
             const data = response.data as any[];
             debug("Received %d old @%s tweets", data.length, this.username);
             if (!data.length) {
@@ -103,16 +125,9 @@ export default class Tweeter {
                 return;
             }
 
-            console.log(data);
-            const set = data.map(tweet => ({
-                tweetId: tweet.id_str,
-                text: tweet.full_text,
-                date: Date.parse(tweet.created_at)
-            }));
-
-            this.lastTweetTs = Math.max(...set.map(t => t.date));
-
-            return data;
+            const ret = this.formatTweetFeed(data.filter(t => Date.parse(t.date) > this.lastTweetTs));
+            this.lastTweetTs = Math.max(...ret.map(t => t.date));
+            return ret;
         }
 
         // Need to fetch full history
@@ -129,17 +144,10 @@ export default class Tweeter {
                 continue;
             }
             retriesLeft = 1;
-
-            const set = data.map(tweet => ({
-                tweetId: tweet.id_str,
-                text: tweet.full_text,
-                date: Date.parse(tweet.created_at)
-            }));
-            console.log(set);
-            fullset = fullset.concat(set);
+            const set = this.formatTweetFeed(data);
+            fullset.push(...set);
             oldestTweetIdStr = String(
-                set
-                    .map(t => BigInt(t.tweetId))
+                data.map(t => BigInt(t.id_str))
                     .reduce((p: bigint, c: bigint) => p ? (c < p ? c : p) : c) - BigInt(1)
             );
         }
