@@ -38,4 +38,9 @@ CREATE TABLE Tweeters (
 	username VARCHAR(16) PRIMARY KEY,
 	lastTweetTs BIGINT UNSIGNED DEFAULT 0
 );
-INSERT INTO Tweeters (username) VALUES ('kernel_aneurysm');
+
+-- Some users who said that they
+--  1. Only tweet in english
+--  2. Have public accounts
+--  3. Occasionally make spelling mistakes
+INSERT INTO Tweeters (username) VALUES ('kernel_aneurysm'), ('bwwgpro1'), ('vinhtea'), ('ApothWaffle');

@@ -56,7 +56,7 @@ export function begin() {
  * @param params - things to fill into template
  * @param ro - can we use read-only database?
  */
-export async function queryProm(query: string, params: string[] = [], ro: boolean = false): Promise<Error | any[]> {
+export async function queryProm(query: string, params: string[] = [], ro: boolean = false, debugError = true): Promise<Error | any[]> {
     // Select database
     let d = ro ? pool_rr : pool_rw;
     return new Promise(resolve => {
@@ -64,9 +64,11 @@ export async function queryProm(query: string, params: string[] = [], ro: boolea
             // Perform query
             d.query(query, params, (error, result) => {
                 if (error) {
-                    debug(error);
-                    debug("Query: %s", query);
-                    debug("Params: %o", params);
+                    if (debugError) {
+                        debug(error);
+                        debug("Query: %s", query);
+                        debug("Params: %o", params);
+                    }
                     resolve(new Error(error.sqlMessage));
                 } else {
                     resolve(result);

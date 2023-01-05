@@ -13,8 +13,10 @@ const debug = Debugger('typo:read');
 
 export const dictionary = new Typo('en_US');
 
-export async function registerTypos(feed: FeedItem[]) {
-    return Promise.all(feed.map(async item => {
+export default async function registerTypos(feed: FeedItem[]) {
+    let ret = 0;
+
+    await Promise.all(feed.map(async item => {
         let startIndex = 0;
         // debug('checking text', item.text);
         // @ts-ignore
@@ -33,16 +35,21 @@ export async function registerTypos(feed: FeedItem[]) {
                 }
                 if (res.length === 0 && !dictionary.check(term.normal) && !dictionary.check(term.text)) {
                     debug('\tNot a word:', term.text);
-                    await queryProm('INSERT INTO NotWords (spelling) VALUES (?) WHERE NOT EXISTS (SELECT spelling FROM NotWords WHERE spelling=?)', [term.text, term.text], false);
+                    ret++;
+                    await queryProm('INSERT INTO NotWords (spelling) VALUES (?)', [term.text, term.text], false, false);
                     queryProm('INSERT INTO MispelledContext (spelling,context,source,startIndex) VALUES (?, ?, ?, ?)', [term.text, item.text, item.url, startIndex], false);
                 }
                 if (res.length) {
                     queryProm('UPDATE Words SET validCount = validCount + 1 WHERE word = ?', [term.normal]);
                 }
+            } else {
+                queryProm('UPDATE Words SET validCount = validCount + 1 WHERE word = ?', [term.normal]);
             }
             startIndex += term.text.length + term.post.length;
         }
     }));
+
+    return ret;
 }
 
 const feed = JSON.parse(readFileSync('/tmp/feed.json').toString());
